@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import axios from "axios";
 
 const ChatPage = () => {
-  const [messages, setMessages] = useState([
-    { content: 'Hello, how can I help you?', sender: 'bot', timestamp: '12:00 PM' },
-    { content: 'Can you explain the usage of your API?', sender: 'user', timestamp: '12:01 PM' }
-  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
 
     // Create a new user message object with the input content and current timestamp
     const newUserMessage = {
@@ -32,11 +31,6 @@ const ChatPage = () => {
     axios.post('http://localhost:8000/chat', { input_message })
       .then(response => {
         console.log('Message sent:', response.data);
-        // Handle any further actions or updates
-
-        // messagesArr.push(rachelMessage);
-        // setMessages(messagesArr);
-
         const botResponse = {
           content: response.data.message,
           sender: 'bot',
@@ -44,31 +38,13 @@ const ChatPage = () => {
         };
 
         setMessages(prevMessages => [...prevMessages, botResponse]);
+        setIsLoading(false);
       })
       .catch(error => {
         console.error('Error sending message:', error);
-        // Handle error cases
+        setIsLoading(false);
       });
-
-      
-
-    // setMessage('');
-
-    // Simulate API call and response
-    // Replace with actual API call and response handling
-
-    // Delayed response simulation (3 seconds)
-    // setTimeout(() => {
-    //   const botResponse = {
-    //     content: `Received: ${userMessage}`,
-    //     sender: 'bot',
-    //     timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' })
-    //   };
-
-    //   // Update the messages state by appending the new bot response
-    //   setMessages(prevMessages => [...prevMessages, botResponse]);
-    // }, 3000);
-  };
+    };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputMessage(e.target.value);
@@ -115,6 +91,11 @@ const ChatPage = () => {
 
           {/* Chat Input */}
           <div className="border-t border-gray-300 px-4 py-2">
+            {isLoading && (
+              <div className="text-center font-light italic mt-10 animate-pulse">
+                Gimme a few seconds...
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
               <input
                 className="w-full rounded-lg py-2 px-4 border border-gray-300"
