@@ -29,7 +29,7 @@ const ChatPage = () => {
   };
 
   const sendRequest = (input_message: string) => {
-    axios.post('http://localhost:8000/chat-message', { input_message })
+    axios.post('http://localhost:8000/chat', { input_message })
       .then(response => {
         console.log('Message sent:', response.data);
         // Handle any further actions or updates

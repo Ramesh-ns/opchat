@@ -1,19 +1,22 @@
 # uvicorn main:app
 # uvicorn main:app --reload
 
+import os
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from decouple import config
 import openai
 from pydantic import BaseModel
-from functions.openai_requests import get_chat_response
+from openai_requests.openai_requests import get_chat_response
+from langchain_requests.custom_chains import get_summary_chain
 
 
 
 # Get Environment Vars
 #openai.organization = config("OPEN_AI_ORG")
 openai.api_key = config("OPEN_AI_KEY")
+os.environ["OPEN_API_KEY"] = config("OPEN_API_KEY")
 
 
 # Initiate App
@@ -56,29 +59,43 @@ async def create_message(message: Message):
     return {"message": "Message created successfully"}
 
 # Post bot response
-# Note: Not playing back in browser when using post request.
 @app.post("/chat-message/")
 async def post_audio(message: Message):
 
-    # Convert audio to text - production
-    # Save the file temporarily
-    # with open(file.filename, "wb") as buffer:
-    #     buffer.write(file.file.read())
-    # audio_input = open(file.filename, "rb")
+    input_message = message.input_message
 
-    # # Decode audio
-    # message_decoded = convert_audio_to_text(audio_input)
-
-    message_decoded = message.input_message
-
-    print(f"Decoded message => {message.input_message}")
+    print(f"input_message => {message.input_message}")
 
     # Guard: Ensure output
-    if not message_decoded:
+    if not input_message:
         raise HTTPException(status_code=400, detail="Failed to decode audio")
 
     # Get chat response
-    chat_response = get_chat_response(message_decoded)
+    chat_response = get_chat_response(input_message)
+
+    print(f"chat_response => {chat_response}")
+
+    # Guard: Ensure output
+    if not chat_response:
+        raise HTTPException(status_code=400, detail="Failed chat response")
+
+    return {"message": chat_response}
+
+
+# Post bot response
+@app.post("/chat/")
+async def post_audio(message: Message):
+
+    input_message = message.input_message
+
+    print(f"input_message => {message.input_message}")
+
+    # Guard: Ensure output
+    if not input_message:
+        raise HTTPException(status_code=400, detail="Failed to decode audio")
+
+    # Get chat response
+    chat_response = get_summary_chain(input_message)
 
     print(f"chat_response => {chat_response}")
 
