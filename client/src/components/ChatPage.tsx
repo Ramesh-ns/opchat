@@ -5,6 +5,7 @@ const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
+  const [file, setFile] = useState(null);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,12 +28,24 @@ const ChatPage = () => {
     setInputMessage('');
   };
 
-  const sendRequest = (input_message: string) => {
-    axios.post('http://localhost:8000/chat', { input_message })
+  const sendRequest = (inputMessage: string) => {
+    const formData = new FormData();
+  //  formData.append('text', input_message);
+    // formData.append('input_message', inputMessage);
+      formData.append('file', file);
+
+  // const response = axios.post('http://localhost:8000/upload', formData, {
+  //     headers: {
+  //       'Content-Type': 'multipart/form-data',
+  //     },
+  //   });
+
+    
+    axios.post('http://localhost:8000/upload?input_message=' + encodeURIComponent(inputMessage), formData)
       .then(response => {
         console.log('Message sent:', response.data);
         const botResponse = {
-          content: response.data.message,
+          content: response.data,
           sender: 'bot',
           timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' })
         };
@@ -48,6 +61,10 @@ const ChatPage = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputMessage(e.target.value);
+  };
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
   };
 
   return (
@@ -104,6 +121,15 @@ const ChatPage = () => {
                 value={inputMessage}
                 onChange={handleChange}
               />
+              <div className="mb-4">
+                <label htmlFor="file" className="block text-lg font-bold mb-2">File</label>
+                <input
+                  id="file"
+                  type="file"
+                  className="w-full p-2"
+                  onChange={handleFileChange}
+                />
+              </div>
               <button
                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 mt-2 rounded-lg"
                 type="submit"
